@@ -1,16 +1,5 @@
-/**
- * Example schema (Model) creation to understand how mongoose and mongodb work
- */
-
-/**
- * import the mongoose package
- */
 const Mongoose = require('mongoose')
 
-
-/**
- * define a schema
- */
 const Schema = Mongoose.Schema
 
 const userSchema = new Schema({

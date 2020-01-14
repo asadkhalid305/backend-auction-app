@@ -1,20 +1,24 @@
 /**
- * Example controller to understand how mongoose and mongodb work with logic
- */
-
-/**
  * npm package and custom file import
  */
 const UserModel = require('../models/user');
-const Mongoose = require('mongoose');
+
+const {
+  client,
+  success
+} = require('../util/variables');
+const {
+  createHash,
+  compareHash
+} = require('../util/functions');
 
 /**
  * all database relation work here
  */
-const isUserExistInDb = (req) => {
-  return new Promise((resolve, reject) => {
+const isUserExistInDb = (email) => {
+  return new Promise(function (resolve, reject) {
     UserModel.findOne({
-        email: req.body.email
+        email: email
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -28,12 +32,11 @@ const isUserExistInDb = (req) => {
 }
 
 const createNewUser = (req) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(function (resolve, reject) {
     const user = new UserModel({
-      id: new Mongoose.Types.ObjectId(),
       name: req.body.name,
       email: req.body.email,
-      password: req.body.password,
+      password: createHash(req.body.password)
     });
 
     user.save().then((user) => {
@@ -51,35 +54,28 @@ const createNewUser = (req) => {
 const User = {
   signup: (req, res) => {
     if (req.body.email && req.body.password) {
-      isUserExistInDb(req).then((user) => {
+      isUserExistInDb(req.body.email).then((user) => {
         if (user) {
-          res.status(406).send({
+          res.status(client.notAcceptable).send({
             message: 'failed',
             data: {
-              id: user,
+              id: user._id,
               details: `user already exists for following address: ${user.email}`
             }
           })
         } else {
           createNewUser(req).then((user) => {
             if (user) {
-              res.status(201).send({
+              res.status(success.created).send({
                 message: 'success',
                 data: {
-                  id: user,
+                  id: user._id,
                   details: `account created for following address: ${user.email}`
                 }
               })
-            } else {
-              res.status(400).send({
-                message: 'failed',
-                data: {
-                  details: `account didn't create`
-                }
-              });
             }
           }).catch((err) => {
-            res.status(400).send({
+            res.status(client.unAuthorized).send({
               message: 'failed',
               data: {
                 details: err
@@ -89,7 +85,7 @@ const User = {
         }
       }).catch((err) => {
         if (err) {
-          res.status(400).send({
+          res.status(client.badRequest).send({
             message: 'failed',
             data: {
               details: err
@@ -98,58 +94,47 @@ const User = {
         }
       })
     } else {
-      res.status(406).send({
+      res.status(client.badRequest).send({
         message: 'failed',
         data: {
-          id: user,
           details: `email or password not found`
         }
       })
     }
   },
-
   login: (req, res) => {
-    if (req.body.password && req.body.email) {
-      isUserExistInDb(req).then((user) => {
-        if (user) {
-          if (req.body.password === user.password) {
-            res.status(201).send({
-              message: 'success',
-              data: {
-                id: user,
-                details: `you have logged in from following address: ${user.email}`
-              }
-            })
-          } else {
-            res.status(401).send({
-              message: 'failed',
-              data: {
-                details: 'invalid email or password'
-              }
-            })
-          }
+    isUserExistInDb(req.body.email).then((user) => {
+      if (user) {
+        if (compareHash(req.body.password, user.password)) {
+          res.status(success.accepted).send({
+            message: 'success',
+            data: {
+              id: user._id,
+              details: `you have logged in via ${req.body.loginType} from following address: ${user.email}`
+            }
+          })
         } else {
-          res.status(400).send({
-            message: 'user does not exists'
+          res.status(client.unAuthorized).send({
+            message: 'failed',
+            data: {
+              id: user._id,
+              details: 'invalid email or password'
+            }
           })
         }
-      }).catch((err) => {
-        res.status(400).send({
-          message: 'failed',
-          data: {
-            details: err
-          }
+      } else {
+        res.status(client.notFound).send({
+          message: 'user does not exists'
         })
-      })
-    } else {
-      res.status(406).send({
+      }
+    }).catch((err) => {
+      res.status(client.badRequest).send({
         message: 'failed',
         data: {
-          id: user,
-          details: `email or password not found`
+          details: err
         }
       })
-    }
+    })
   }
 }
 

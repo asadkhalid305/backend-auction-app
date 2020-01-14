@@ -40,7 +40,7 @@ const server = Http.createServer(application);
  * if you are running your application on domain then production and auto generated port will be assigned to environment and port variable
  */
 const environment = process.env.NODE_ENV || 'development';
-const port = process.env.PORT || 3010;
+const port = process.env.PORT || 3011;
 
 
 /**
