@@ -55,6 +55,7 @@ const mongodb = Configurations[environment];
 Mongoose.connect(mongodb.url, {
     useNewUrlParser: true,
     useFindAndModify: false,
+    useUnifiedTopology: true
 });
 
 
