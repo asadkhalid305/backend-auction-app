@@ -9,7 +9,8 @@ const {
 } = require('../util/variables');
 const {
   createHash,
-  compareHash
+  compareHash,
+  createToken
 } = require('../util/functions');
 
 /**
@@ -47,7 +48,6 @@ const createNewUser = (req) => {
   })
 }
 
-
 /**
  * all logic here
  */
@@ -66,13 +66,27 @@ const User = {
         } else {
           createNewUser(req).then((user) => {
             if (user) {
-              res.status(success.created).send({
-                message: 'success',
-                data: {
-                  id: user._id,
-                  details: `account created for following address: ${user.email}`
-                }
-              })
+              createToken({
+                  ...user
+                })
+                .then(token => {
+                  res.status(success.created).send({
+                    message: 'success',
+                    data: {
+                      id: user._id,
+                      token: token,
+                      details: `account created for following address: ${user.email}`
+                    }
+                  })
+                })
+                .catch(err => {
+                  res.status(client.unAuthorized).send({
+                    message: 'error in generating token',
+                    data: {
+                      details: err
+                    }
+                  })
+                })
             }
           }).catch((err) => {
             res.status(client.unAuthorized).send({
@@ -106,13 +120,27 @@ const User = {
     isUserExistInDb(req.body.email).then((user) => {
       if (user) {
         if (compareHash(req.body.password, user.password)) {
-          res.status(success.accepted).send({
-            message: 'success',
-            data: {
-              id: user._id,
-              details: `you have logged in via ${req.body.loginType} from following address: ${user.email}`
-            }
-          })
+          createToken({
+              ...user
+            })
+            .then(token => {
+              res.status(success.accepted).send({
+                message: 'success',
+                data: {
+                  id: user._id,
+                  token: token,
+                  details: `you have logged in via email from following address: ${user.email}`
+                }
+              })
+            })
+            .catch(err => {
+              res.status(client.unAuthorized).send({
+                message: 'error in generating token',
+                data: {
+                  details: err
+                }
+              })
+            })
         } else {
           res.status(client.unAuthorized).send({
             message: 'failed',
@@ -134,6 +162,14 @@ const User = {
           details: err
         }
       })
+    })
+  },
+  rough: (req, res) => {
+    res.status(success.accepted).send({
+      message: 'success',
+      data: {
+        details: `rough API`
+      }
     })
   }
 }

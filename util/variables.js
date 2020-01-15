@@ -15,8 +15,11 @@ const server = {
     serviceUnavailable: 503,
 }
 
+const JWT_SECRET_KEY = "z1s0qcLORBfVsObxN1NilLvdyhZxfkjjNsqE0zqhFR6V28WxAN338OHnOQPSCDF"
+
 module.exports = {
     success,
     client,
-    server
+    server,
+    JWT_SECRET_KEY
 }
