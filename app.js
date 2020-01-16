@@ -3,6 +3,7 @@ const Express = require('express');
 const Router = Express.Router();
 const BodyParser = require('body-parser');
 const Mongoose = require('mongoose');
+var cors = require('cors')
 require('dotenv').config();
 
 const Routes = require('./routes');
@@ -15,6 +16,8 @@ application.use(BodyParser.json());
 application.use(BodyParser.urlencoded({
     extended: false
 }));
+
+application.use(cors())
 
 const server = Http.createServer(application);
 

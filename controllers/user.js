@@ -93,10 +93,10 @@ const User = {
                 .then(token => {
                   res.status(success.created).send({
                     message: 'success',
+                    details: `account created for following address: ${user.email}`,
                     data: {
                       id: user._id,
                       token: token,
-                      details: `account created for following address: ${user.email}`
                     }
                   })
                 })
@@ -147,10 +147,10 @@ const User = {
             .then(token => {
               res.status(success.accepted).send({
                 message: 'success',
+                details: `you have logged in via email from following address: ${user.email}`,
                 data: {
                   id: user._id,
                   token: token,
-                  details: `you have logged in via email from following address: ${user.email}`
                 }
               })
             })
@@ -193,9 +193,9 @@ const User = {
           sendEmail(user.email).then(() => {
             res.status(success.accepted).send({
               message: 'success',
+              details: `token issued`,
               data: {
                 id: user._id,
-                details: `token issued`
               }
             })
           }).catch((err) => {
@@ -223,9 +223,7 @@ const User = {
     verifyToken: (req, res) => {
       res.status(success.accepted).send({
         message: 'success',
-        data: {
-          details: `token verified`
-        }
+        details: `token verified`
       })
     },
     setNewPassword: (req, res) => {
@@ -237,10 +235,10 @@ const User = {
             .then(token => {
               res.status(success.accepted).send({
                 message: 'success',
+                details: `password reset successfully`,
                 data: {
                   id: user._id,
                   token: token,
-                  details: `password reset successfully`
                 }
               })
             })
