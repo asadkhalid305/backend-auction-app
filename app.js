@@ -3,6 +3,7 @@ const Express = require('express');
 const Router = Express.Router();
 const BodyParser = require('body-parser');
 const Mongoose = require('mongoose');
+require('dotenv').config();
 
 const Routes = require('./routes');
 const Configurations = require('./configuration');

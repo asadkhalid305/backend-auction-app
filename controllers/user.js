@@ -5,13 +5,16 @@ const UserModel = require('../models/user');
 
 const {
   client,
-  success
+  success,
+  server
 } = require('../util/variables');
 const {
   createHash,
   compareHash,
   createToken
 } = require('../util/functions');
+
+const sendEmail = require('../nodemailer')
 
 /**
  * all database relation work here
@@ -46,6 +49,24 @@ const createNewUser = (req) => {
       reject(err);
     })
   })
+}
+
+const setPassword = (req) => {
+  return new Promise(function (resolve, reject) {
+    UserModel.findOneAndUpdate({
+        _id: req.body.id
+      }, {
+        password: createHash(req.body.password)
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
 }
 
 /**
@@ -164,13 +185,86 @@ const User = {
       })
     })
   },
-  rough: (req, res) => {
-    res.status(success.accepted).send({
-      message: 'success',
-      data: {
-        details: `rough API`
-      }
-    })
+
+  passwordRecovery: {
+    generateToken: (req, res) => {
+      isUserExistInDb(req.body.email).then((user) => {
+        if (user) {
+          sendEmail(user.email).then(() => {
+            res.status(success.accepted).send({
+              message: 'success',
+              data: {
+                id: user._id,
+                details: `token issued`
+              }
+            })
+          }).catch((err) => {
+            res.status(server.serviceUnavailable).send({
+              message: 'failed',
+              data: {
+                details: 'user exist but email did not send'
+              }
+            })
+          })
+        } else {
+          res.status(client.notFound).send({
+            message: 'user does not exist'
+          })
+        }
+      }).catch((err) => {
+        res.status(client.badRequest).send({
+          message: 'failed',
+          data: {
+            details: err
+          }
+        })
+      })
+    },
+    verifyToken: (req, res) => {
+      res.status(success.accepted).send({
+        message: 'success',
+        data: {
+          details: `token verified`
+        }
+      })
+    },
+    setNewPassword: (req, res) => {
+      setPassword(req).then((user) => {
+          console.log(user);
+          createToken({
+              ...user
+            })
+            .then(token => {
+              res.status(success.accepted).send({
+                message: 'success',
+                data: {
+                  id: user._id,
+                  token: token,
+                  details: `password reset successfully`
+                }
+              })
+            })
+            .catch(err => {
+              res.status(client.unAuthorized).send({
+                message: 'error in generating token',
+                data: {
+                  details: err
+                }
+              })
+            })
+        })
+        .catch(err => {
+          res.status(client.badRequest).send({
+            message: 'failed',
+            data: {
+              details: err
+            }
+          })
+        })
+    },
+    rough: (req, res) => {
+      console.log('asad');
+    }
   }
 }
 
