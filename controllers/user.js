@@ -53,6 +53,7 @@ const createNewUser = (req) => {
 
 const setPassword = (req) => {
   return new Promise(function (resolve, reject) {
+    console.log(req.body.id);
     UserModel.findOneAndUpdate({
         _id: req.body.id
       }, {
@@ -228,7 +229,6 @@ const User = {
     },
     setNewPassword: (req, res) => {
       setPassword(req).then((user) => {
-          console.log(user);
           createToken({
               ...user
             })

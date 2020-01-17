@@ -20,8 +20,8 @@ var routes = (application) => {
   application.use('/api', api)
   application.use('/auth', auth)
 
-  recovery.get("/token/generate", User.passwordRecovery.generateToken);
-  recovery.get("/token/verify", passport.authenticate('reset', {
+  recovery.post("/token/generate", User.passwordRecovery.generateToken);
+  recovery.post("/token/verify", passport.authenticate('reset', {
     session: false
   }), User.passwordRecovery.verifyToken);
   recovery.post("/password/new", User.passwordRecovery.setNewPassword);
