@@ -14,11 +14,22 @@ const applicationSchema = new Schema({
     description: {
         type: String
     },
+    secret_key: {
+        type: String
+    },
     user_id: {
         type: Schema.Types.ObjectId,
         ref: 'user',
         required: true
-    }
+    },
+    registered_users: [{
+        id: {
+            type: String
+        },
+        name: {
+            type: String
+        }
+    }]
 })
 
 module.exports = Mongoose.model('application', applicationSchema);

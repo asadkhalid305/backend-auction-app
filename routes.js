@@ -4,7 +4,6 @@ const
   Application = require("./controllers/application");
 const passport = require('passport');
 const Express = require('express');
-const passportConfig = require('./passport');
 
 
 var routes = (application) => {
@@ -31,7 +30,9 @@ var routes = (application) => {
   auth.post("/signup", User.signup);
   auth.post("/login", User.login);
 
-  app.post("/create", Application.create);
+  app.post("/add", Application.add);
+  app.get("/fetch", Application.fetch);
+  app.post("/appendUsers", Application.addUsers);
 
   application.use((req, res, next) => {
     res.status(404).send("Route not found!");

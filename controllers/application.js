@@ -1,4 +1,4 @@
-const ApplicationModel = require('../models//application');
+const AppModel = require('../models/application');
 const UserModel = require('../models/user');
 
 const {
@@ -7,10 +7,15 @@ const {
   server
 } = require('../util/variables');
 
-const isApplicationExistInDb = (name) => {
+const {
+  emailToken
+} = require('../util/functions');
+
+const searchAppInDbByName = (req) => {
   return new Promise(function (resolve, reject) {
-    ApplicationModel.findOne({
-        name: name
+    AppModel.findOne({
+        name: req.body.name,
+        user_id: req.headers.user_id,
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -23,16 +28,34 @@ const isApplicationExistInDb = (name) => {
   });
 }
 
-const createNewApplication = (req) => {
+const searchAppInDbById = (req) => {
   return new Promise(function (resolve, reject) {
-    const application = new ApplicationModel({
+    AppModel.findOne({
+        _id: req.body.app_id,
+        secret_key: req.body.secret_key,
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const createNewApp = (req) => {
+  return new Promise(function (resolve, reject) {
+    const App = new AppModel({
       name: req.body.name,
       domain: req.body.domain,
       description: req.body.description,
-      user_id: req.body.user_id
+      user_id: req.headers.user_id,
+      secret_key: emailToken(10)
     });
 
-    application.save().then((item) => {
+    App.save().then((item) => {
       resolve(item);
     }).catch((err) => {
       reject(err);
@@ -40,10 +63,10 @@ const createNewApplication = (req) => {
   })
 }
 
-const setUserApplicationId = (req) => {
+const setUserAppId = (req) => {
   return new Promise(function (resolve, reject) {
     UserModel.updateOne({
-        _id: req.body.user_id
+        _id: req.headers.user_id
       }, {
         $addToSet: {
           application_id: req.body.application_id
@@ -60,9 +83,48 @@ const setUserApplicationId = (req) => {
   });
 }
 
+const getAllApps = (req) => {
+  return new Promise(function (resolve, reject) {
+    AppModel.find({
+        user_id: req.headers.user_id
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const appendUsersInApp = (req) => {
+  return new Promise(function (resolve, reject) {
+    AppModel.updateOne({
+        _id: req.body.app_id,
+        secret_key: req.body.secret_key
+      }, {
+        $addToSet: {
+          registered_users: {
+            $each: req.body.users
+          }
+        }
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
 const Application = {
-  create: (req, res) => {
-    isApplicationExistInDb(req.body.name).then((app) => {
+  add: (req, res) => {
+    searchAppInDbByName(req).then((app) => {
       if (app) {
         res.status(client.notAcceptable).send({
           message: 'failed',
@@ -72,10 +134,10 @@ const Application = {
           }
         })
       } else {
-        createNewApplication(req).then((app) => {
+        createNewApp(req).then((app) => {
           if (app) {
             req.body.application_id = app.id;
-            setUserApplicationId(req).then(() => {
+            setUserAppId(req).then(() => {
                 res.status(success.created).send({
                   message: 'success',
                   details: `application created for following name: ${app.name}`,
@@ -114,51 +176,46 @@ const Application = {
     })
   },
 
-  login: (req, res) => {
-    isApplicationExistInDb(req.body.email).then((application) => {
-      if (application) {
-        if (compareHash(req.body.password, application.password)) {
-          jwtToken({
-              ...application
-            })
-            .then(token => {
-              res.status(success.accepted).send({
-                message: 'success',
-                details: `you have logged in via email from following address: ${application.email}`,
-                data: {
-                  id: application._id,
-                  token: token,
-                }
-              })
-            })
-            .catch(err => {
-              res.status(client.unAuthorized).send({
-                message: 'error in generating token',
-                data: {
-                  details: err
-                }
-              })
-            })
-        } else {
-          res.status(client.unAuthorized).send({
-            message: 'failed',
-            data: {
-              id: application._id,
-              details: 'invalid email or password'
-            }
-          })
-        }
+  fetch: (req, res) => {
+    getAllApps(req).then(apps => {
+      if (apps.length > 0) {
+        res.status(success.accepted).send({
+          message: 'success',
+          data: apps
+        });
       } else {
-        res.status(client.notFound).send({
-          message: 'application does not exists'
+        res.status(client.notAcceptable).send({
+          message: 'failed',
+          details: `app not found`,
         })
       }
     }).catch((err) => {
-      res.status(client.badRequest).send({
+      res.status(client.unAuthorized).send({
         message: 'failed',
-        data: {
-          details: err
-        }
+        details: 'error in finding apps in db'
+      })
+    })
+  },
+
+  addUsers: (req, res) => {
+    searchAppInDbById(req).then(app => {
+      if (app) {
+        appendUsersInApp(req).then(() => {
+          res.status(success.accepted).send({
+            message: 'success',
+            details: 'users added in app'
+          });
+        })
+      } else {
+        res.status(client.notAcceptable).send({
+          message: 'failed',
+          details: `app not found`,
+        })
+      }
+    }).catch((err) => {
+      res.status(client.unAuthorized).send({
+        message: 'failed',
+        details: 'error in finding apps in db'
       })
     })
   }

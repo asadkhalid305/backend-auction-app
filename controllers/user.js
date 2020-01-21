@@ -67,7 +67,7 @@ const setPassword = (req) => {
 
 const setUserToken = (email) => {
   return new Promise(function (resolve, reject) {
-    const token = emailToken;
+    const token = emailToken(4);
     let time = Date.now();
     time = Math.floor((time / 1000) + 60)
 

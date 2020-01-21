@@ -29,7 +29,7 @@ const jwtToken = ({
     })
 }
 
-var emailToken = crypto.randomBytes(4).toString('hex');
+var emailToken = (len) => crypto.randomBytes(len).toString('hex');
 
 module.exports = {
     createHash,
