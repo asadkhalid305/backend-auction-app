@@ -13,7 +13,19 @@ const userSchema = new Schema({
     },
     password: {
         type: String
-    }
+    },
+    token: {
+        type: String
+    },
+    time: {
+        type: String
+    },
+    application_id: [{
+        type: Schema.Types.ObjectId,
+        ref: 'application',
+        required: false
+
+    }]
 })
 
 module.exports = Mongoose.model('user', userSchema);

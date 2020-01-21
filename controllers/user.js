@@ -1,6 +1,3 @@
-/**
- * npm package and custom file import
- */
 const UserModel = require('../models/user');
 
 const {
@@ -11,14 +8,12 @@ const {
 const {
   createHash,
   compareHash,
-  createToken
+  jwtToken,
+  emailToken
 } = require('../util/functions');
 
 const sendEmail = require('../nodemailer')
 
-/**
- * all database relation work here
- */
 const isUserExistInDb = (email) => {
   return new Promise(function (resolve, reject) {
     UserModel.findOne({
@@ -53,9 +48,9 @@ const createNewUser = (req) => {
 
 const setPassword = (req) => {
   return new Promise(function (resolve, reject) {
-    console.log(req.body.id);
     UserModel.findOneAndUpdate({
-        _id: req.body.id
+        _id: req.body.id,
+        token: req.body.token
       }, {
         password: createHash(req.body.password)
       }, (err, item) => {
@@ -63,6 +58,55 @@ const setPassword = (req) => {
           reject(err);
         } else
           resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const setUserToken = (email) => {
+  return new Promise(function (resolve, reject) {
+    const token = emailToken;
+    let time = Date.now();
+    time = Math.floor((time / 1000) + 60)
+
+    UserModel.findOneAndUpdate({
+        email: email
+      }, {
+        token: token,
+        time: time
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else {
+          item.token = token;
+          resolve(item)
+        }
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const isTokenValid = (req) => {
+  return new Promise(function (resolve, reject) {
+    let time = Date.now();
+    time = time / 1000;
+
+    UserModel.findOne({
+        _id: req.body.id,
+        token: req.body.token,
+        time: {
+          $gte: time
+        }
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(item)
+        };
       })
       .catch((err) => {
         reject(err);
@@ -88,7 +132,7 @@ const User = {
         } else {
           createNewUser(req).then((user) => {
             if (user) {
-              createToken({
+              jwtToken({
                   ...user
                 })
                 .then(token => {
@@ -142,7 +186,7 @@ const User = {
     isUserExistInDb(req.body.email).then((user) => {
       if (user) {
         if (compareHash(req.body.password, user.password)) {
-          createToken({
+          jwtToken({
               ...user
             })
             .then(token => {
@@ -191,22 +235,33 @@ const User = {
     generateToken: (req, res) => {
       isUserExistInDb(req.body.email).then((user) => {
         if (user) {
-          sendEmail(user.email).then(() => {
-            res.status(success.accepted).send({
-              message: 'success',
-              details: `token issued`,
-              data: {
-                id: user._id,
-              }
+          setUserToken(user.email).then(user => {
+              sendEmail(user.email, user.token).then(() => {
+                res.status(success.accepted).send({
+                  message: 'success',
+                  details: `token issued`,
+                  data: {
+                    id: user._id,
+                    token: user.token
+                  }
+                })
+              }).catch((err) => {
+                res.status(server.serviceUnavailable).send({
+                  message: 'failed',
+                  data: {
+                    details: 'user exist but email did not send'
+                  }
+                })
+              })
             })
-          }).catch((err) => {
-            res.status(server.serviceUnavailable).send({
-              message: 'failed',
-              data: {
-                details: 'user exist but email did not send'
-              }
+            .catch((err) => {
+              res.status(server.serviceUnavailable).send({
+                message: 'failed',
+                data: {
+                  details: 'error in soring token in database'
+                }
+              })
             })
-          })
         } else {
           res.status(client.notFound).send({
             message: 'user does not exist'
@@ -222,34 +277,41 @@ const User = {
       })
     },
     verifyToken: (req, res) => {
-      res.status(success.accepted).send({
-        message: 'success',
-        details: `token verified`
+      isTokenValid(req).then(user => {
+        if (user) {
+          res.status(success.accepted).send({
+            message: 'success',
+            details: `token verified`
+          })
+        } else {
+          res.status(client.badRequest).send({
+            message: 'failed',
+            data: {
+              details: "token doesn't exist in database or it has expired"
+            }
+          })
+        }
       })
     },
     setNewPassword: (req, res) => {
       setPassword(req).then((user) => {
-          createToken({
-              ...user
+          if (user) {
+            res.status(success.accepted).send({
+              message: 'success',
+              details: `password reset successfully`,
+              data: {
+                id: user._id,
+                token: user.token
+              }
             })
-            .then(token => {
-              res.status(success.accepted).send({
-                message: 'success',
-                details: `password reset successfully`,
-                data: {
-                  id: user._id,
-                  token: token,
-                }
-              })
+          } else {
+            res.status(client.unAuthorized).send({
+              message: 'error in updating PASSWORD',
+              data: {
+                details: err
+              }
             })
-            .catch(err => {
-              res.status(client.unAuthorized).send({
-                message: 'error in generating token',
-                data: {
-                  details: err
-                }
-              })
-            })
+          }
         })
         .catch(err => {
           res.status(client.badRequest).send({

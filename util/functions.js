@@ -1,12 +1,13 @@
 const bcrypt = require('bcrypt')
 const jwt = require("jsonwebtoken");
+const crypto = require('crypto')
 
 var saltRounds = 10;
 
 const createHash = (password) => bcrypt.hashSync(password, saltRounds);
 const compareHash = (password, hashedPassword) => bcrypt.compareSync(password, hashedPassword);
 
-const createToken = ({
+const jwtToken = ({
     user,
     expire = 0
 }) => {
@@ -28,8 +29,11 @@ const createToken = ({
     })
 }
 
+var emailToken = crypto.randomBytes(4).toString('hex');
+
 module.exports = {
     createHash,
     compareHash,
-    createToken
+    jwtToken,
+    emailToken
 }

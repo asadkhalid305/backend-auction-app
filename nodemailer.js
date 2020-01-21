@@ -1,10 +1,10 @@
 "use strict";
 const nodemailer = require("nodemailer");
 const {
-    createToken
+    jwtToken
 } = require('./util/functions');
 
-const sendEmail = (email) => {
+const sendEmail = (email, token) => {
     return new Promise(async (resolve, reject) => {
         let transporter = nodemailer.createTransport({
             host: "smtp.ethereal.email",
@@ -17,22 +17,12 @@ const sendEmail = (email) => {
             }
         });
 
-        let code = '';
-        await createToken({
-            user: {
-                email
-            },
-            expire: 60 * 5
-        }).then(token => {
-            code = token;
-        }).catch(err => reject(err));
-
         await transporter.sendMail({
                 from: 'asad.khalid@salsoft.net', // sender address
                 to: email, // list of receivers
                 subject: "Forget Password - Verification Code", // Subject line
                 html: `<h1>Verification code</h1>
-                <p>${code}</p><br>`
+                <p>${token}</p><br>`
             })
             .then(info => resolve(info))
             .catch(err => reject(err))
