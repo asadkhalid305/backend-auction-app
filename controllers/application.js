@@ -31,8 +31,8 @@ const searchAppInDbByName = (req) => {
 const searchAppInDbById = (req) => {
   return new Promise(function (resolve, reject) {
     AppModel.findOne({
-        _id: req.body.app_id,
-        secret_key: req.body.secret_key,
+        _id: req.headers.app_id,
+        secret_key: req.headers.secret_key,
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -85,8 +85,9 @@ const setUserAppId = (req) => {
 
 const getAllApps = (req) => {
   return new Promise(function (resolve, reject) {
-    AppModel.find({
-        user_id: req.headers.user_id
+    AppModel.findOne({
+        _id: req.headers.app_id,
+        secret_key: req.headers.secret_key
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -99,17 +100,57 @@ const getAllApps = (req) => {
   });
 }
 
-const appendUsersInApp = (req) => {
+const addUsers = (req) => {
   return new Promise(function (resolve, reject) {
     AppModel.updateOne({
-        _id: req.body.app_id,
-        secret_key: req.body.secret_key
+        _id: req.headers.app_id,
+        secret_key: req.headers.secret_key
       }, {
         $addToSet: {
           registered_users: {
             $each: req.body.users
           }
         }
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const addProducts = (req) => {
+  return new Promise(function (resolve, reject) {
+    AppModel.updateOne({
+        _id: req.headers.app_id,
+        secret_key: req.headers.secret_key
+      }, {
+        $addToSet: {
+          products: {
+            $each: req.body.products
+          }
+        }
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const deleteApp = (req) => {
+  return new Promise(function (resolve, reject) {
+    AppModel.findOneAndRemove({
+        _id: req.headers.app_id,
+        secret_key: req.headers.secret_key,
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -197,10 +238,26 @@ const Application = {
     })
   },
 
-  addUsers: (req, res) => {
+  remove: (req, res) => {
+    deleteApp(req).then(app => {
+        res.status(success.accepted).send({
+          message: 'success',
+          details: 'app deleted',
+          data: app
+        });
+      })
+      .catch((err) => {
+        res.status(client.unAuthorized).send({
+          message: 'failed',
+          details: 'error in deleting app from db'
+        })
+      })
+  },
+
+  appendUsers: (req, res) => {
     searchAppInDbById(req).then(app => {
       if (app) {
-        appendUsersInApp(req).then(() => {
+        addUsers(req).then(() => {
           res.status(success.accepted).send({
             message: 'success',
             details: 'users added in app'
@@ -218,7 +275,52 @@ const Application = {
         details: 'error in finding apps in db'
       })
     })
-  }
+  },
+
+  appendProducts: (req, res) => {
+    searchAppInDbById(req).then(app => {
+      if (app) {
+        addProducts(req).then(() => {
+          res.status(success.accepted).send({
+            message: 'success',
+            details: 'products added in app'
+          });
+        })
+      } else {
+        res.status(client.notAcceptable).send({
+          message: 'failed',
+          details: `app not found`,
+        })
+      }
+    }).catch((err) => {
+      res.status(client.unAuthorized).send({
+        message: 'failed',
+        details: 'error in finding apps in db'
+      })
+    })
+  },
+
+  fetchProducts: (req, res) => {
+    searchAppInDbById(req).then(app => {
+      if (app) {
+        res.status(success.accepted).send({
+          message: 'success',
+          details: "products found",
+          data: app.products
+        });
+      } else {
+        res.status(client.notAcceptable).send({
+          message: 'failed',
+          details: `products not found`,
+        })
+      }
+    }).catch((err) => {
+      res.status(client.unAuthorized).send({
+        message: 'failed',
+        details: 'error in finding apps in db'
+      })
+    })
+  },
 }
 
 module.exports = Application;

@@ -23,16 +23,20 @@ var routes = (application) => {
   application.use('/auth', auth)
   application.use('/app', app)
 
-  recovery.post("/token/generate", User.passwordRecovery.generateToken);
+  recovery.get("/token/generate", User.passwordRecovery.generateToken);
   recovery.post("/token/verify", User.passwordRecovery.verifyToken);
-  recovery.post("/password/new", User.passwordRecovery.setNewPassword);
+  recovery.patch("/password/new", User.passwordRecovery.setNewPassword);
 
   auth.post("/signup", User.signup);
   auth.post("/login", User.login);
 
-  app.post("/add", Application.add);
   app.get("/fetch", Application.fetch);
-  app.post("/appendUsers", Application.addUsers);
+  app.post("/add", Application.add);
+  app.delete("/remove", Application.remove);
+  app.patch("/user/add", Application.appendUsers);
+  app.patch("/product/add", Application.appendProducts);
+  app.get("/product/fetch", Application.fetchProducts);
+
 
   application.use((req, res, next) => {
     res.status(404).send("Route not found!");

@@ -3,7 +3,8 @@ const UserModel = require('../models/user');
 const {
   client,
   success,
-  server
+  server,
+  token_expire
 } = require('../util/variables');
 const {
   createHash,
@@ -69,7 +70,7 @@ const setUserToken = (email) => {
   return new Promise(function (resolve, reject) {
     const token = emailToken(4);
     let time = Date.now();
-    time = Math.floor((time / 1000) + 60)
+    time = Math.floor((time / 1000) + 60 * token_expire)
 
     UserModel.findOneAndUpdate({
         email: email
@@ -233,7 +234,7 @@ const User = {
 
   passwordRecovery: {
     generateToken: (req, res) => {
-      isUserExistInDb(req.body.email).then((user) => {
+      isUserExistInDb(req.query.email).then((user) => {
         if (user) {
           setUserToken(user.email).then(user => {
               sendEmail(user.email, user.token).then(() => {

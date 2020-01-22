@@ -24,10 +24,42 @@ const applicationSchema = new Schema({
     },
     registered_users: [{
         id: {
-            type: String
+            type: String,
+            required: true
         },
         name: {
-            type: String
+            type: String,
+            required: true
+        },
+        imageUrl: {
+            type: String,
+            required: true
+        }
+    }],
+    products: [{
+        id: {
+            type: String,
+            required: true
+        },
+        name: {
+            type: String,
+            required: true
+        },
+        initial_bid: {
+            type: String,
+            required: true
+        },
+        current_bid: {
+            type: String,
+            required: true
+        },
+        imageUrl: {
+            type: String,
+            required: true
+        },
+        expire: {
+            type: String,
+            required: true
         }
     }]
 })

@@ -15,8 +15,12 @@ const server = {
     serviceUnavailable: 503,
 }
 
+//in minutes
+const token_expire = 5
+
 module.exports = {
     success,
     client,
-    server
+    server,
+    token_expire
 }
