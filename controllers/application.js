@@ -85,9 +85,8 @@ const setUserAppId = (req) => {
 
 const getAllApps = (req) => {
   return new Promise(function (resolve, reject) {
-    AppModel.findOne({
-        _id: req.headers.app_id,
-        secret_key: req.headers.secret_key
+    AppModel.find({
+        user_id: req.headers.user_id
       }, (err, item) => {
         if (err) {
           reject(err);
