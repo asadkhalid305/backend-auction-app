@@ -8,12 +8,9 @@ passport.use(new JwtStrategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken('Authorization'),
     secretOrKey: process.env.JWT_SECRET_KEY
 }, (payload, done) => {
-    console.log('asad');
     try {
-        console.log('asad');
         done(null, payload);
     } catch (error) {
-        console.log('asad');
         done(error, false);
     }
 }));

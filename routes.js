@@ -2,6 +2,8 @@ const
   User = require("./controllers/user");
 const
   Application = require("./controllers/application");
+const
+  Product = require("./controllers/product");
 const passport = require('passport');
 const Express = require('express');
 
@@ -11,6 +13,7 @@ var routes = (application) => {
   const api = Express.Router();
   const auth = Express.Router();
   const app = Express.Router();
+  const product = Express.Router();
 
   application.use((req, res, next) => {
     console.log("Routes activated!");
@@ -22,6 +25,7 @@ var routes = (application) => {
   application.use('/api', api)
   application.use('/auth', auth)
   application.use('/app', app)
+  application.use('/product', product)
 
   recovery.get("/token/generate", User.passwordRecovery.generateToken);
   recovery.post("/token/verify", User.passwordRecovery.verifyToken);
@@ -36,6 +40,8 @@ var routes = (application) => {
   app.patch("/user/add", Application.appendUsers);
   app.patch("/product/add", Application.appendProducts);
   app.get("/product/fetch", Application.fetchProducts);
+
+  product.patch('/bid', Product.updateBid)
 
 
   application.use((req, res, next) => {

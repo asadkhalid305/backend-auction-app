@@ -324,7 +324,7 @@ const User = {
         })
     },
     rough: (req, res) => {
-      console.log('asad');
+      console.log('rough api');
     }
   }
 }

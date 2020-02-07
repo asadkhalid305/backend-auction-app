@@ -5,6 +5,9 @@ const BodyParser = require('body-parser');
 const Mongoose = require('mongoose');
 var cors = require('cors')
 require('dotenv').config();
+const {
+    initializeSocket
+} = require('./socket');
 
 const Routes = require('./routes');
 const Configurations = require('./configuration');
@@ -20,6 +23,8 @@ application.use(BodyParser.urlencoded({
 application.use(cors())
 
 const server = Http.createServer(application);
+
+initializeSocket(server)
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -45,4 +50,4 @@ db.on('connected', () => {
     server.listen(port, () => {
         console.log(`Server is up and running @${port}`);
     });
-})
+});
