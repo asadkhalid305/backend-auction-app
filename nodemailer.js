@@ -1,8 +1,5 @@
 "use strict";
 const nodemailer = require("nodemailer");
-const {
-    jwtToken
-} = require('./util/functions');
 
 const sendEmail = (email, token) => {
     return new Promise(async (resolve, reject) => {

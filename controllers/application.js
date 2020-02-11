@@ -4,11 +4,14 @@ const UserModel = require('../models/user');
 const {
   client,
   success,
-  server
 } = require('../util/variables');
 
 const {
   emailToken
+} = require('../util/functions');
+
+const {
+  jwtToken
 } = require('../util/functions');
 
 const searchAppInDbByName = (req) => {
@@ -33,6 +36,23 @@ const searchAppInDbById = (req) => {
     AppModel.findOne({
         _id: req.headers.app_id,
         secret_key: req.headers.secret_key,
+      }, (err, item) => {
+        if (err) {
+          reject(err);
+        } else
+          resolve(item)
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+const searchAppInDbByIdAndUser = (req) => {
+  return new Promise(function (resolve, reject) {
+    AppModel.findOne({
+        _id: req.body.app_id,
+        'registered_users._id': req.body.user_id
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -299,27 +319,35 @@ const Application = {
     })
   },
 
-  fetchProducts: (req, res) => {
-    searchAppInDbById(req).then(app => {
+  authenticate: (req, res) => {
+    searchAppInDbByIdAndUser(req).then(app => {
       if (app) {
-        res.status(success.accepted).send({
-          message: 'success',
-          details: "products found",
-          data: app.products
-        });
+        jwtToken(req.body)
+          .then(token => res.status(success.ok).send({
+            message: 'success',
+            data: {
+              token
+            }
+          }))
+          .catch((err) => {
+            res.status(client.unAuthorized).send({
+              message: 'failed',
+              details: 'error in generating token'
+            })
+          })
       } else {
         res.status(client.notAcceptable).send({
           message: 'failed',
-          details: `products not found`,
+          details: `app not found`,
         })
       }
     }).catch((err) => {
       res.status(client.unAuthorized).send({
         message: 'failed',
-        details: 'error in finding apps in db'
+        details: 'error in finding app in db'
       })
     })
-  },
+  }
 }
 
 module.exports = Application;

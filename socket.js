@@ -2,28 +2,16 @@ var io;
 
 const initializeSocket = (server) => {
     io = require('socket.io')(server);
-
-    var user;
-    io.use(function (socket, next) {
-            user = socket.handshake.query.user
-            if (user) {
-                //db call auth
-                //then
-                next();
-                //catch
-                // next(new Error('Authentication error'));
-            } else {
-                next(new Error('User id did not recieve'));
-            }
-        })
-        .on('connection', function (socket) {
-            socket.join('guest');
-            io.to('guest').emit('connected', `${user.name} joined the auction`);
-        });
+    // var user;
+    io.on('connection', function (socket) {
+        // user = socket.handshake.query.user && JSON.parse(socket.handshake.query.user)
+        socket.join('guest');
+        // io.to('guest').emit('connected', `${user.id} joined the auction`);
+    });
 }
 
-const emit = (event, callback) =>
-    io.emit(event, callback);
+const emit = (event, payload, callback) =>
+    io.emit(event, payload, callback);
 
 
 const listen = (event, callback) =>

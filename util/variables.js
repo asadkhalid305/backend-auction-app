@@ -1,4 +1,5 @@
 const success = {
+    ok: 200,
     created: 201,
     accepted: 202
 }

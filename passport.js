@@ -9,8 +9,10 @@ passport.use(new JwtStrategy({
     secretOrKey: process.env.JWT_SECRET_KEY
 }, (payload, done) => {
     try {
+        console.log(payload);
         done(null, payload);
     } catch (error) {
+        console.log(error);
         done(error, false);
     }
 }));
