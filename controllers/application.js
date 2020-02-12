@@ -323,12 +323,14 @@ const Application = {
     searchAppInDbByIdAndUser(req).then(app => {
       if (app) {
         jwtToken(req.body)
-          .then(token => res.status(success.ok).send({
-            message: 'success',
-            data: {
-              token
-            }
-          }))
+          .then(token => {
+            res.status(success.ok).send({
+              message: 'success',
+              data: {
+                token
+              }
+            })
+          })
           .catch((err) => {
             res.status(client.unAuthorized).send({
               message: 'failed',

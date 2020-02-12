@@ -9,23 +9,25 @@ const compareHash = (password, hashedPassword) => bcrypt.compareSync(password, h
 
 const jwtToken = ({
     user,
-    expire = 0
+    // expire = 0
 }) => {
     return new Promise((resolve, reject) => {
         jwt.sign({
-            ...user
-        }, process.env.JWT_SECRET_KEY, {
-            expiresIn: expire
-        }, (
-            err,
-            token
-        ) => {
-            if (err)
-                reject(err);
-            else {
-                resolve(token);
-            }
-        })
+                ...user
+            }, process.env.JWT_SECRET_KEY,
+            // {
+            // expiresIn: expire
+            // },
+            (
+                err,
+                token
+            ) => {
+                if (err)
+                    reject(err);
+                else {
+                    resolve(token);
+                }
+            })
     })
 }
 

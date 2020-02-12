@@ -45,12 +45,10 @@ var routes = (application) => {
   app.patch("/user/add", Application.appendUsers);
   app.patch("/product/add", Application.appendProducts);
 
-  // product.get("/", passport.authenticate('jwt', {
-  //   session: false
-  // }), Product.fetchProducts, (err, req, res, next) => {
-  //   alert('asad');
-  // });
-  product.get('/', Product.fetchProducts);
+  product.get("/", passport.authenticate('jwt', {
+    session: false
+  }), Product.fetchProducts);
+
   product.patch('/bid', Product.updateBid);
 
   application.use((req, res, next) => {

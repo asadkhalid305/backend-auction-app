@@ -5,25 +5,12 @@ const {
 } = require('passport-jwt');
 
 passport.use(new JwtStrategy({
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken('Authorization'),
+    jwtFromRequest: ExtractJwt.fromExtractors([ExtractJwt.fromUrlQueryParameter("token"), ExtractJwt.fromHeader("Authorization"), ExtractJwt.fromAuthHeaderAsBearerToken("Authorization")]),
     secretOrKey: process.env.JWT_SECRET_KEY
 }, (payload, done) => {
     try {
-        console.log(payload);
         done(null, payload);
     } catch (error) {
-        console.log(error);
         done(error, false);
     }
 }));
-
-// passport.use('reset', new JwtStrategy({
-//     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken('Authorization'),
-//     secretOrKey: process.env.JWT_SECRET_KEY
-// }, (payload, done) => {
-//     try {
-//         done(null, payload);
-//     } catch (error) {
-//         done(error, false);
-//     }
-// }));

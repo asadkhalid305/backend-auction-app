@@ -11,7 +11,6 @@ const newHighestBid = (req) => {
     return new Promise(function (resolve, reject) {
         AppModel.findOneAndUpdate({
                 _id: req.headers.app_id,
-                secret_key: req.headers.secret_key,
                 'products._id': req.body.product._id
             }, {
                 $set: {
@@ -36,7 +35,6 @@ const searchAppInDbById = (req) => {
     return new Promise(function (resolve, reject) {
         AppModel.findOne({
                 _id: req.headers.app_id,
-                secret_key: req.headers.secret_key,
             }, (err, item) => {
                 if (err) {
                     reject(err);
