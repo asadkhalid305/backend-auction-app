@@ -41,14 +41,13 @@ var routes = (application) => {
 
   app.get("/", Application.fetch);
   app.post("/add", Application.add);
-  app.delete("/remove", Application.remove);
+  app.patch("/status", Application.status);
   app.patch("/user/add", Application.appendUsers);
   app.patch("/product/add", Application.appendProducts);
 
   product.get("/", passport.authenticate('jwt', {
     session: false
   }), Product.fetchProducts);
-
   product.patch('/bid', Product.updateBid);
 
   application.use((req, res, next) => {

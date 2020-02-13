@@ -65,7 +65,10 @@ const applicationSchema = new Schema({
             type: String,
             required: true
         }
-    }]
+    }],
+    isActive: {
+        type: Boolean
+    },
 })
 
 module.exports = Mongoose.model('application', applicationSchema);

@@ -52,7 +52,8 @@ const searchAppInDbByIdAndUser = (req) => {
   return new Promise(function (resolve, reject) {
     AppModel.findOne({
         _id: req.body.app_id,
-        'registered_users._id': req.body.user_id
+        'registered_users._id': req.body.user_id,
+        isActive: true
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -72,7 +73,8 @@ const createNewApp = (req) => {
       domain: req.body.domain,
       description: req.body.description,
       user_id: req.headers.user_id,
-      secret_key: emailToken(10)
+      secret_key: emailToken(10),
+      isActive: true
     });
 
     App.save().then((item) => {
@@ -165,11 +167,13 @@ const addProducts = (req) => {
   });
 }
 
-const deleteApp = (req) => {
+const toggleStatus = (req) => {
   return new Promise(function (resolve, reject) {
-    AppModel.findOneAndRemove({
+    AppModel.findOneAndUpdate({
         _id: req.headers.app_id,
         secret_key: req.headers.secret_key,
+      }, {
+        isActive: req.body.status
       }, (err, item) => {
         if (err) {
           reject(err);
@@ -257,8 +261,8 @@ const Application = {
     })
   },
 
-  remove: (req, res) => {
-    deleteApp(req).then(app => {
+  status: (req, res) => {
+    toggleStatus(req).then(app => {
         res.status(success.accepted).send({
           message: 'success',
           details: 'app deleted',
