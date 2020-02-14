@@ -82,7 +82,32 @@ const Product = {
         }).catch((err) => {
             res.status(client.unAuthorized).send({
                 message: 'failed',
-                details: 'error in finding apps in db'
+                details: 'error in finding app in db'
+            })
+        })
+    },
+
+    fetchProduct: (req, res) => {
+        searchAppInDbById(req).then(app => {
+            if (app) {
+                let products = app.products;
+                let product = products.filter(product => product._id === req.query.id)
+
+                res.status(success.accepted).send({
+                    message: 'success',
+                    details: "product found",
+                    data: product
+                });
+            } else {
+                res.status(client.notAcceptable).send({
+                    message: 'failed',
+                    details: `product not found`,
+                })
+            }
+        }).catch((err) => {
+            res.status(client.unAuthorized).send({
+                message: 'failed',
+                details: 'error in finding app in db'
             })
         })
     },

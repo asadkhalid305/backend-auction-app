@@ -62,7 +62,11 @@ const applicationSchema = new Schema({
             required: true
         },
         expire: {
-            type: String,
+            type: Number,
+            required: true
+        },
+        isExpired: {
+            type: Boolean,
             required: true
         }
     }],

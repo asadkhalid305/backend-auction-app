@@ -7,11 +7,9 @@ const {
 } = require('../util/variables');
 
 const {
-  emailToken
-} = require('../util/functions');
-
-const {
-  jwtToken
+  emailToken,
+  jwtToken,
+  scheduleProductExpiry
 } = require('../util/functions');
 
 const searchAppInDbByName = (req) => {
@@ -52,7 +50,7 @@ const searchAppInDbByIdAndUser = (req) => {
   return new Promise(function (resolve, reject) {
     AppModel.findOne({
         _id: req.body.app_id,
-        'registered_users._id': req.body.user_id,
+        'registered_users.id': req.body.user_id,
         isActive: true
       }, (err, item) => {
         if (err) {
@@ -304,10 +302,26 @@ const Application = {
     searchAppInDbById(req).then(app => {
       if (app) {
         addProducts(req).then(() => {
-          res.status(success.accepted).send({
-            message: 'success',
-            details: 'products added in app'
+          let products = [...req.body.products];
+          let isCatch = false;
+          products.forEach(product => {
+            scheduleProductExpiry(product)
+              .catch(err => {
+                console.log(err, 'asad');
+                res.status(client.notAcceptable).send({
+                  message: 'failed',
+                  details: `error in cron job`,
+                })
+
+                return;
+              })
           });
+          if (!isCatch) {
+            res.status(success.accepted).send({
+              message: 'success',
+              details: 'products added in app'
+            });
+          }
         })
       } else {
         res.status(client.notAcceptable).send({

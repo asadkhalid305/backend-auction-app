@@ -9,6 +9,8 @@ const {
     initializeSocket
 } = require('./socket');
 
+require('./cron')
+
 const Routes = require('./routes');
 const Configurations = require('./configuration');
 

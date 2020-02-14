@@ -48,6 +48,7 @@ var routes = (application) => {
   product.get("/", passport.authenticate('jwt', {
     session: false
   }), Product.fetchProducts);
+  product.get('/:id', Product.fetchProduct);
   product.patch('/bid', Product.updateBid);
 
   application.use((req, res, next) => {
